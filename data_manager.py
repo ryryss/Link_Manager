@@ -124,21 +124,21 @@ class DataManager:
 
 
     def save(self):
-        """
-        Save current memory data into Excel file.
-        """
+        """Save data to Excel."""
 
-        df = pd.DataFrame(
-            self.rows,
-            columns=self.columns
-        )
+        columns = list(self.columns)
 
+        if "Status" not in columns:
+            columns.append("Status")
+
+        df = pd.DataFrame(self.rows)
+
+        df = df.reindex(columns=columns)
 
         df.to_excel(
             self.storage_path,
             index=False
         )
-
 
 
     # -------------------------------------------------
@@ -232,131 +232,43 @@ class DataManager:
 
         return columns, rows
 
-
-
     # -------------------------------------------------
     # Create
     # -------------------------------------------------
 
-    def add_rows(
-        self,
-        new_columns: List[str],
-        new_rows: List[Dict[str, str]]
-    ):
-        """
-        Add new rows.
-
-        Rules:
-            1. Completely empty rows are ignored.
-            2. Duplicate detection uses the "Link" column.
-            3. Empty Links are allowed and are not checked.
-        """
+    def add_rows(self, new_columns: List[str], new_rows: List[Dict[str, str]]):
 
         if not self.columns:
+            self.columns = [c for c in new_columns if c != "Status"]
 
-            self.columns = list(
-                new_columns
-            )
-
-
-        existing_links = set()
-
-
-        if "Link" in self.columns:
-
-            for row in self.rows:
-
-                link = str(
-                    row.get("Link", "")
-                ).strip()
-
-                if link:
-
-                    existing_links.add(
-                        link
-                    )
-
-
-        added_count = 0
-        skipped_duplicate = 0
-        skipped_empty = 0
-
+        existing_links = {
+            str(row.get("Link", "")).strip()
+            for row in self.rows
+            if str(row.get("Link", "")).strip()
+        }
 
         for row in new_rows:
 
-            aligned_row = {
-                column: str(
-                    row.get(column, "") or ""
-                ).strip()
-                for column in self.columns
+            link = str(row.get("Link", "")).strip()
+
+            if not link:
+                continue
+
+            if link in existing_links:
+                continue
+
+            aligned = {
+                col: row.get(col, "")
+                for col in self.columns
             }
 
+            aligned["Status"] = ""
 
-            # Ignore rows where every column is empty
-            if all(
-                value == ""
-                for value in aligned_row.values()
-            ):
-                skipped_empty += 1
-                continue
+            self.rows.append(aligned)
 
-
-            # -----------------------------------------
-            # Ignore completely empty rows
-            # -----------------------------------------
-
-            if not any(
-                value
-                for value in aligned_row.values()
-            ):
-
-                skipped_empty += 1
-                continue
-
-
-
-            # -----------------------------------------
-            # Duplicate check by Link
-            # -----------------------------------------
-
-            if "Link" in self.columns:
-
-                link = aligned_row.get(
-                    "Link",
-                    ""
-                )
-
-
-                if link:
-
-                    if link in existing_links:
-
-                        skipped_duplicate += 1
-                        continue
-
-
-                    existing_links.add(
-                        link
-                    )
-
-
-
-            self.rows.append(
-                aligned_row
-            )
-
-            added_count += 1
-
-
+            existing_links.add(link)
 
         self.save()
-
-
-        return {
-            "added": added_count,
-            "skipped_duplicate": skipped_duplicate,
-            "skipped_empty": skipped_empty
-        }
 
 
     # -------------------------------------------------
@@ -382,8 +294,13 @@ class DataManager:
 
             self.save()
 
+    def update_status(self, row_index: int, status: str):
 
+        if 0 <= row_index < len(self.rows):
 
+            self.rows[row_index]["Status"] = status
+
+            self.save()
     # -------------------------------------------------
     # Delete
     # -------------------------------------------------

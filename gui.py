@@ -198,13 +198,6 @@ class App:
     # ---------------- UI ----------------
 
     def _toggle_row_color(self, color):
-        """
-        Toggle selected row color.
-        Press Y -> green
-        Press N -> red
-
-        Press again on the same color -> clear color
-        """
 
         selected = self.tree.selection()
 
@@ -213,16 +206,29 @@ class App:
 
         for item in selected:
 
-            tags = self.tree.item(item, "tags")
+            row_index = int(item)
 
-            # already same color -> remove
-            if color in tags:
+            current = self.dm.rows[row_index].get("Status", "")
+
+            if current == color:
+
+                self.dm.update_status(
+                    row_index,
+                    ""
+                )
+
                 self.tree.item(
                     item,
                     tags=()
                 )
 
             else:
+
+                self.dm.update_status(
+                    row_index,
+                    color
+                )
+
                 self.tree.item(
                     item,
                     tags=(color,)
@@ -379,6 +385,16 @@ class App:
             self.dm.columns
         )
 
+        self.tree.tag_configure(
+            "green",
+            background="lightgreen"
+        )
+
+        self.tree.tag_configure(
+            "red",
+            background="lightcoral"
+        )
+
     def _select_all(self, event=None):
         """
         Select all rows in the table.
@@ -533,25 +549,15 @@ class App:
 
 
     # ---------------- Table ----------------
-
-
     def _refresh_table(self):
 
-        if tuple(self.dm.columns) != self.tree["columns"]:
-
-            self._set_columns(
-                self.dm.columns
-            )
-
+        if self.tree["columns"] != tuple(self.dm.columns):
+            self._set_columns(self.dm.columns)
 
         for item in self.tree.get_children():
-
             self.tree.delete(item)
 
-
-
         keyword = self.search_var.get().strip()
-
 
         for idx in self.dm.search(keyword):
 
@@ -562,15 +568,15 @@ class App:
                 for col in self.dm.columns
             ]
 
+            status = row.get("Status", "")
 
             self.tree.insert(
                 "",
                 "end",
                 iid=str(idx),
-                values=values
+                values=values,
+                tags=(status,) if status else ()
             )
-
-
 
     # ---------------- Delete ----------------
 
