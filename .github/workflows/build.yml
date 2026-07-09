@@ -29,12 +29,7 @@ jobs:
 
     - name: Build EXE
       run: |
-        pyinstaller ^
-          -F ^
-          -w ^
-          --collect-all tkinterdnd2 ^
-          --name RewardManager ^
-          main.py
+        pyinstaller -F -w --collect-all tkinterdnd2 --name RewardManager main.py
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4

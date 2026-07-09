@@ -43,7 +43,7 @@ import pandas as pd
 
 class DataManager:
 
-    DEFAULT_STORAGE_FILE = "data.xlsx"
+    DEFAULT_STORAGE_FILE = "%APPDATA%\RewardManager\data.xlsx"
 
 
     def __init__(self, storage_path: str = None):
