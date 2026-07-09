@@ -29,10 +29,19 @@ jobs:
 
     - name: Build EXE
       run: |
-        pyinstaller -F -w --collect-all tkinterdnd2 --name RewardManager main.py
+        pyinstaller -F -w --collect-all tkinterdnd2 --name LinkManager main.py
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: RewardManager
-        path: dist/RewardManager.exe
+        name: LinkManager
+        path: dist/LinkManager.exe
+
+    - name: Create ZIP
+      run: Compress-Archive -Path dist/LinkManager.exe -DestinationPath dist/LinkManager.zip
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: dist/LinkManager.zip
