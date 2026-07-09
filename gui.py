@@ -197,6 +197,36 @@ class App:
 
     # ---------------- UI ----------------
 
+    def _toggle_row_color(self, color):
+        """
+        Toggle selected row color.
+        Press Y -> green
+        Press N -> red
+
+        Press again on the same color -> clear color
+        """
+
+        selected = self.tree.selection()
+
+        if not selected:
+            return
+
+        for item in selected:
+
+            tags = self.tree.item(item, "tags")
+
+            # already same color -> remove
+            if color in tags:
+                self.tree.item(
+                    item,
+                    tags=()
+                )
+
+            else:
+                self.tree.item(
+                    item,
+                    tags=(color,)
+                )
 
     def _build_widgets(self):
 
@@ -237,26 +267,23 @@ class App:
             padx=10
         )
 
-
-        tk.Button(
-            top,
-            text="Add",
-            command=self._open_import_dialog
-        ).pack(
-            side="left",
-            padx=5
-        )
-
-
-        tk.Button(
-            top,
-            text="Delete Selected",
-            command=self._delete_selected
-        ).pack(
-            side="left"
-        )
+        # tk.Button(
+        #     top,
+        #     text="Add",
+        #     command=self._open_import_dialog
+        # ).pack(
+        #     side="left",
+        #     padx=5
+        # )
 
 
+        # tk.Button(
+        #     top,
+        #     text="Delete Selected",
+        #     command=self._delete_selected
+        # ).pack(
+        #     side="left"
+        # )
 
         table_frame = tk.Frame(self.root)
 
@@ -274,6 +301,15 @@ class App:
             selectmode="extended"
         )
 
+        self.tree.tag_configure(
+            "green",
+            background="lightgreen"
+        )
+
+        self.tree.tag_configure(
+            "red",
+            background="lightcoral"
+        )
 
         self.tree.pack(
             side="left",
@@ -311,6 +347,12 @@ class App:
             lambda e:
                 self._delete_selected()
         )
+
+        self.tree.bind("<y>", lambda e: self._toggle_row_color("green"))
+        self.tree.bind("<Y>", lambda e: self._toggle_row_color("green"))
+
+        self.tree.bind("<n>", lambda e: self._toggle_row_color("red"))
+        self.tree.bind("<N>", lambda e: self._toggle_row_color("red"))
 
         # Keyboard shortcuts
         self.tree.bind(

@@ -32,29 +32,55 @@ Data structure:
     ]
 
 Storage:
-    Default file: data.xlsx
+    Default file: link.xlsx
 """
 
 import os
+import sys
 from typing import List, Dict, Tuple
 
 import pandas as pd
 
 
-class DataManager:
+import os
 
-    DEFAULT_STORAGE_FILE = "%APPDATA%\RewardManager\data.xlsx"
+def get_app_path():
+    """
+    Get the directory where the exe is located.
+    Works for both:
+    - Running from Python source
+    - Running as PyInstaller exe
+    """
 
+    if getattr(sys, "frozen", False):
+        # Running as compiled exe
+        return os.path.dirname(sys.executable)
 
-    def __init__(self, storage_path: str = None):
-
-        self.storage_path = (
-            storage_path
-            or self.DEFAULT_STORAGE_FILE
+    else:
+        # Running from Python
+        return os.path.dirname(
+            os.path.abspath(__file__)
         )
 
-        self.columns: List[str] = []
-        self.rows: List[Dict[str, str]] = []
+class DataManager:
+
+    DEFAULT_STORAGE_FILE = "links.xlsx"
+
+
+    def __init__(self, storage_path=None):
+
+        if storage_path:
+            self.storage_path = storage_path
+
+        else:
+            self.storage_path = os.path.join(
+                get_app_path(),
+                self.DEFAULT_STORAGE_FILE
+            )
+
+
+        self.columns = []
+        self.rows = []
 
         self.load()
 
